@@ -1,0 +1,10 @@
+drink/VB milk/NN by/IN the/DT table/NN
+save/VB time/NN on/IN the/DT job/NN
+meet/VB people/NN at/IN an/DT airport/NN
+paper/NN flies/VB in/IN a/DT circle/NN
+mosquitoes/NN buzz/VB like/IN the/DT flies/NN
+beans/NN burn/VB the/DT iron/NN grill/NN
+flies/NN drink/VB a/DT honey/NN glass/NN
+people/NN like/VB an/DT army/NN arrow/NN
+dinner/NN time/NN flies/VB all/DT day/NN
+fruit/NN flies/NN time/VB the/DT sunrise/NN
