@@ -30,29 +30,33 @@ def process_input(path):
     t_len = len(tag_count) - 1
     while line:
         words = line.split()
+        # dictionary to store the probability of each possible tag to each word in sentence
         best_scores = []
-        back_pointer = []
-        first_tag = {}
-        first_backpointer = {}
+        # back pointers to get the maximum tag sequence
+        back_pointers = []
+        start_score = {}
+        start_pointer = {}
         cur_word = words[0]
+        # get all possible seen tags for the current word if not found use all tags
         if cur_word in emission:
             possible_tags = emission[cur_word].keys()
         else:
             possible_tags = tag_set
+        # use delimiter and find probability for each possible transitions from start
         for tag in possible_tags:
             if tag == "<s>":
                 continue
-            first_tag[tag] = transition_probability("<s>", tag, t_len) * emission_probability(cur_word, tag)
-            first_backpointer[tag] = "<s>"
-
-        best_scores.append(first_tag)
-        back_pointer.append(first_backpointer)
-
+            start_score[tag] = transition_probability("<s>", tag, t_len) * emission_probability(cur_word, tag)
+            start_pointer[tag] = "<s>"
+        best_scores.append(start_score)
+        back_pointers.append(start_pointer)
         for i in range(1, len(words)):
             cur_word = words[i]
-            this_tag = {}
-            this_backpointer = {}
-            prev_tags = best_scores[-1]
+            # dictionary with tag and probability for current word
+            cur_score = {}
+            cur_pointer = {}
+            # dictionary with tag and probability for previous word
+            previous_tags = best_scores[-1]
             if cur_word in emission:
                 possible_tags = emission[cur_word].keys()
             else:
@@ -60,39 +64,39 @@ def process_input(path):
             for tag in possible_tags:
                 if tag == "<s>":
                     continue
-                best_previous = prev_tags.keys()[0]
+                previous_best = previous_tags.keys()[0]
                 max = 0.0
-                for prevtag in prev_tags.keys():
-                    prob = prev_tags[prevtag] * transition_probability(prevtag, tag,t_len) * emission_probability(words[i],tag)
+                for prev_tag in previous_tags.keys():
+                    prob = previous_tags[prev_tag] * transition_probability(prev_tag, tag,t_len) * emission_probability(words[i],tag)
                     if prob >= max:
                         max = prob
-                        best_previous = prevtag
-                this_tag[tag] = prev_tags[best_previous] * transition_probability(best_previous,tag,t_len) * emission_probability(words[i],tag)
-                this_backpointer[tag] = best_previous
-            max = 0.0
-            currbest = this_tag.keys()[0]
-            for tag in this_tag.keys():
-                if this_tag[tag] >= max:
-                    max = this_tag[tag]
-                    currbest = tag
+                        previous_best = prev_tag
+                cur_score[tag] = max
+                cur_pointer[tag] = previous_best
 
-            best_scores.append(this_tag)
-            back_pointer.append(this_backpointer)
-        prev_tags = best_scores[-1]
-        best_previous = prev_tags.keys()[0]
+            max = 0.0
+            last_tag = cur_score.keys()[0]
+            for tag in cur_score.keys():
+                if cur_score[tag] >= max:
+                    max = cur_score[tag]
+                    last_tag = tag
+            best_scores.append(cur_score)
+            back_pointers.append(cur_pointer)
+        previous_tags = best_scores[-1]
+        previous_best = previous_tags.keys()[0]
         max = 0.0
-        for prevtag in prev_tags.keys():
-            prob = prev_tags[prevtag] * transition_probability(prevtag,currbest,t_len)
+        for prev_tag in previous_tags.keys():
+            prob = previous_tags[prev_tag] * transition_probability(prev_tag, last_tag, t_len)
             if prob >= max:
                 max = prob
-                best_previous = prevtag
+                previous_best = prev_tag
 
-        tag_sequence = [best_previous]
-        back_pointer.reverse()
-        cur_tag = best_previous
-        for bp in back_pointer:
-            tag_sequence.append(bp[cur_tag])
-            cur_tag = bp[cur_tag]
+        tag_sequence = [previous_best]
+        back_pointers.reverse()
+        cur_score = previous_best
+        for bp in back_pointers:
+            tag_sequence.append(bp[cur_score])
+            cur_score = bp[cur_score]
         tag_sequence.pop()
         tag_sequence.reverse()
         write_to_file(tag_sequence, line)
