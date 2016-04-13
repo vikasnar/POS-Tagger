@@ -7,7 +7,6 @@ out_file = codecs.open('hmmoutput.txt', 'w', 'utf-8')
 transition = {}
 emission = {}
 tag_count = {}
-last_tag = {}
 
 
 def read_model():
@@ -21,9 +20,6 @@ def read_model():
         elif data[0] == "Count":
             global tag_count
             tag_count = eval(model.readline())
-        elif data[0] == "Last Tags":
-            global last_tag
-            last_tag = eval(model.readline())
         line = model.readline()
 
 
@@ -34,8 +30,8 @@ def process_input(path):
     t_len = len(tag_count) - 1
     while line:
         words = line.split()
-        viterbi = []
-        backpointer = []
+        best_scores = []
+        back_pointer = []
         first_tag = {}
         first_backpointer = {}
         cur_word = words[0]
@@ -49,14 +45,14 @@ def process_input(path):
             first_tag[tag] = transition_probability("<s>", tag, t_len) * emission_probability(cur_word, tag)
             first_backpointer[tag] = "<s>"
 
-        viterbi.append(first_tag)
-        backpointer.append(first_backpointer)
+        best_scores.append(first_tag)
+        back_pointer.append(first_backpointer)
 
         for i in range(1, len(words)):
             cur_word = words[i]
             this_tag = {}
             this_backpointer = {}
-            prev_tags = viterbi[-1]
+            prev_tags = best_scores[-1]
             if cur_word in emission:
                 possible_tags = emission[cur_word].keys()
             else:
@@ -80,9 +76,9 @@ def process_input(path):
                     max = this_tag[tag]
                     currbest = tag
 
-            viterbi.append(this_tag)
-            backpointer.append(this_backpointer)
-        prev_tags = viterbi[-1]
+            best_scores.append(this_tag)
+            back_pointer.append(this_backpointer)
+        prev_tags = best_scores[-1]
         best_previous = prev_tags.keys()[0]
         max = 0.0
         for prevtag in prev_tags.keys():
@@ -92,9 +88,9 @@ def process_input(path):
                 best_previous = prevtag
 
         tag_sequence = [best_previous]
-        backpointer.reverse()
+        back_pointer.reverse()
         cur_tag = best_previous
-        for bp in backpointer:
+        for bp in back_pointer:
             tag_sequence.append(bp[cur_tag])
             cur_tag = bp[cur_tag]
         tag_sequence.pop()
@@ -122,7 +118,7 @@ def transition_probability(prev, nxt, t_len):
 
 def emission_probability(word, tag):
     if word in emission and tag in emission[word]:
-        return float(emission[word][tag])/ tag_count[tag]
+        return float(emission[word][tag])/tag_count[tag]
     else:
         return 1
 
@@ -137,4 +133,3 @@ def main():
     e = time.time()
     print(e-s)
 main()
-

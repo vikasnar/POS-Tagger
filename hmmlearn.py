@@ -39,10 +39,6 @@ def read_data(train_file):
             else:
                 emission[word] = {}
                 emission[word][tag] = 1
-            if tag in last_tags:
-                last_tags[tag] += 1
-            else:
-                last_tags[tag] = 1
             previous = tag
 
 
@@ -52,7 +48,6 @@ def generate_model():
     for key, value in emission.iteritems():
         model.write(u"E {}\n{}\n".format(key, value))
     model.write(u"Count\n{}\n".format(count))
-    model.write(u"Last Tags\n{}\n".format(last_tags))
     model.close()
 
 
